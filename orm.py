@@ -26,4 +26,11 @@ class Task(Base):
         return f"Когда: {self.date}\nЧе делаем: {self.task}\nПриоритет: {map_priority[self.priority]}"
 
 
+class MediaIds(Base):
+    __tablename__ = 'Media ids'
+    id = Column(Integer, primary_key=True)
+    file_id = Column(String(255))
+    filename = Column(String(255))
+
+
 Base.metadata.create_all(engine)

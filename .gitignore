@@ -1,2 +1,5 @@
 env
 main.db
+media/*
+setup.txt
+__pycache__

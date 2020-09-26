@@ -11,6 +11,8 @@ from utils import bot
 from states import ManageTasks
 from aiogram.utils.emoji import emojize
 import logging
+
+
 def RepresentsInt(s):
     try: 
         int(s)
@@ -35,8 +37,9 @@ async def query_database(message: types.Message):
     Session = sessionmaker(bind=engine)
     session = Session()
     if len(argument) > 0:
+        
         date = datetime.datetime.date(dateparser.parse(argument))
-        logging.info("Requesting tasks for date", date)
+        #logging.info("Requesting tasks for date", date)
         response = session.query(Task).filter(Task.date == date).order_by(Task.id_).all()
     else:
 
@@ -81,7 +84,7 @@ async def query_database(message: types.Message):
 
 @dp.callback_query_handler(lambda t: True,  state=ManageTasks.waiting_for_task_choice)
 async def choose_tasks_action(query: types.CallbackQuery, state: FSMContext):
-    print("TEXT", query.data)
+    #print("TEXT", query.data)
     try:
         
         id_ = int(query.data)
@@ -105,8 +108,8 @@ async def choose_tasks_action(query: types.CallbackQuery, state: FSMContext):
 
 
     except Exception as e:
-        print("SNAFU")
-        print(e)
+        logging.warning("SNAFU")
+        logging.warning(str(e))
         return 
 
 
@@ -149,6 +152,7 @@ async def handle_action_choise(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=ManageTasks.on_update, content_types=types.ContentTypes.TEXT)
 async def process_update(message: types.Message, state: FSMContext):
+    logging.info("Processing update value choice...")
     if message.text == "Date":
         await ManageTasks.on_update_date.set()
         await message.answer("Введите новое значение, ", reply_markup=ReplyKeyboardRemove())
@@ -175,6 +179,7 @@ async def process_update(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=ManageTasks.on_update_date, content_types=types.ContentTypes.TEXT)
 async def process_update_date(message: types.Message, state: FSMContext):
+    logging.info("Processing date update...")
     try:
         if message.text != "Cancel":
             Session = sessionmaker(bind=engine)
@@ -199,6 +204,7 @@ async def process_update_date(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=ManageTasks.on_update_text, content_types=types.ContentTypes.TEXT)
 async def process_update_text(message: types.Message, state: FSMContext):
+    logging.info("Processing task text update...")
     try:
         Session = sessionmaker(bind=engine)
         session = Session()
@@ -216,13 +222,13 @@ async def process_update_text(message: types.Message, state: FSMContext):
 
 @dp.message_handler(state=ManageTasks.on_update_priority, content_types=types.ContentTypes.TEXT)
 async def process_update_priority(message: types.Message, state: FSMContext):
+    logging.info("Processing task priority update...")
     if message.text == "Зеленый":
         Session = sessionmaker(bind=engine)
         session = Session()
         id_ = await state.get_data()
         id_ = id_["id_"]
         session.query(Task).filter(Task.id_ == id_).update({Task.priority:0}, synchronize_session=False)
-    
         session.commit()
     elif message.text == "Желтый":
         Session = sessionmaker(bind=engine)

@@ -23,7 +23,7 @@ async def add_task_text(message: types.Message):
 
 @dp.message_handler(state=AddTask.waiting_for_task, content_types=types.ContentTypes.TEXT)
 async def add_task_time(message: types.Message, state: FSMContext):
-    print(message.text)
+    #print(message.text)
     if message.text == "Cancel":
         await message.answer("Выхожу из интерфейса.", reply_markup=ReplyKeyboardRemove())
         await state.finish()
