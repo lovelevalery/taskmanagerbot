@@ -1,39 +1,47 @@
 import os
 import asyncio
-
 from aiogram import Bot, Dispatcher, executor, types
+
+
+
+from config import *
+from utils import ioloop, dp, auth
+
+
 import logging
+from datetime import datetime
 
-logging.basicConfig(level=logging.INFO)
+from handlers import *
 
-API_TOKEN = os.environ.get("TELEGRAM_API_TOKEN")
-if API_TOKEN == None:
-	raise ValueError("Environment variable \"TELEGRAM_API_TOKEN\" is not set, with no default")
-
-
-bot = Bot(token=API_TOKEN)
-dp = Dispatcher(bot)
-
-def auth(func):
-	async def wrapper(message):
-		if message["from"]["id"] not in {251538773}:
-			print(message["from"]["id"])
-			return await message.reply("Access denied", reply=False)
-
-		return await func(message)
-	return wrapper
+"""
+engine = create_engine('sqlite:///:{DB_FILENAME}:', echo=True)
+Base = declarative_base()
 
 
-		
-@dp.message_handler(commands=["start", "help"])
+class Task(Base):
+    __tablename__ = "tasks"
+    id=Column(Integer)
+    time = Column(DateTime)
+    task = Column(String)
+
+    def __repr__(self):
+        return f"<Task(time={self.time}, task={self.task})>"
+
+"""
+
+"""
+
+
+
+
+@dp.message_handler(commands=["help"])
 @auth
-async def send_welcome(msg: types.Message):
-	await message.reply(
-			"Бот для трекинга задач",
-			"Добавить задачу: /new",
-			 "Посмотреть на список всех задач: /all",
-			  reply=False)
-
+async def process_help_command(message: types.Message):
+    await message.reply(
+        "Привет!\n\
+Я могу: \n\
+1. Добавить задачу: /new\n\
+2. Посмотреть на список всех задач: /all")
 
 @dp.message_handler()
 @auth
@@ -43,7 +51,36 @@ async def echo(message: types.Message):
 
     await message.answer(message.text)
 
-	
-if __name__ == '__main__':
+@dp.message_handler()
+@auth
+async def echo(message: types.Message):
+    # old style:
+    # await bot.send_message(message.chat.id, message.text)
 
-    executor.start_polling(dp, skip_updates=True)
+    await message.answer(message.text)
+
+
+
+
+async def match_time(time: tuple):
+    while True:
+         ts = datetime.now()
+         if ts.hour == time[0] and ts.minute == time[1] and ts.second == 0:
+            return
+         else:
+            await asyncio.sleep(0)
+
+
+
+async def periodic(sleep_for):
+    while True:
+        await match_time((13, 47))
+        now = datetime.utcnow()
+        for id in {251538773}:
+            await bot.send_message(id, f"{now}",
+                                   disable_notification=True)
+
+"""
+if __name__ == '__main__':
+    #ioloop.create_task(periodic(10))
+    executor.start_polling(dp)
