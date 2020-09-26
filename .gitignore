@@ -3,3 +3,4 @@ main.db
 media/*
 setup.txt
 __pycache__
+handlers/__pycache__/*
