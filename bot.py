@@ -10,7 +10,6 @@ from utils import ioloop, dp, auth
 
 import logging
 from datetime import datetime
-
 from handlers import *
 
 """
@@ -82,5 +81,5 @@ async def periodic(sleep_for):
 
 """
 if __name__ == '__main__':
-    #ioloop.create_task(periodic(10))
+    ioloop.create_task(notify_at(NOTIFY_HOURS, NOTIFY_MINUITES))
     executor.start_polling(dp)

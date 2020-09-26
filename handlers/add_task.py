@@ -1,17 +1,15 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.dispatcher.filters.state import State
 from aiogram.types import ReplyKeyboardRemove
 import dateparser
 import datetime
 from utils import dp, auth
 from orm import engine, Task
 from sqlalchemy.orm import sessionmaker
+from states import AddTask
 
-class AddTask(StatesGroup):
-    waiting_for_task = State()
-    waiting_for_date = State()
-    waiting_for_priority = State()
+
 
 @dp.message_handler(commands="new", state="*")
 @auth

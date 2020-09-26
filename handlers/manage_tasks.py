@@ -8,8 +8,9 @@ from utils import dp, auth, logging
 from orm import engine, Task
 from sqlalchemy.orm import sessionmaker
 from utils import bot
-
-
+from states import ManageTasks
+from aiogram.utils.emoji import emojize
+import logging
 def RepresentsInt(s):
     try: 
         int(s)
@@ -19,22 +20,27 @@ def RepresentsInt(s):
 
 
 
-class ManageTasks(StatesGroup):
-    waiting_for_task_choice = State()
-    waiting_for_action_choice = State()
-    on_delete = State()
-    on_update = State()
-    on_update_date = State()
-    on_update_text = State()
-    on_update_priority = State()
+
+map_priority_to_unicode = {
+    0: ":green_apple:",
+    1: ":banana:",
+    2: ":apple:"
+}
 
 
 @dp.message_handler(commands=["all"], state="*")
 @auth
 async def query_database(message: types.Message):
+    argument = message.get_args()
     Session = sessionmaker(bind=engine)
     session = Session()
-    response = session.query(Task).order_by(Task.id_).all()
+    if len(argument) > 0:
+        date = datetime.datetime.date(dateparser.parse(argument))
+        logging.info("Requesting tasks for date", date)
+        response = session.query(Task).filter(Task.date == date).order_by(Task.id_).all()
+    else:
+
+        response = session.query(Task).order_by(Task.id_).all()
     #print("RESPONSE", response)
     if len(response) == 0:
         await message.answer("Нет добавленных задач")
@@ -43,7 +49,29 @@ async def query_database(message: types.Message):
         
         #keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
         for index, t_ in enumerate(response):
-            button = types.InlineKeyboardButton(f"({t_.id_}). {str(t_.date)}, {t_.task}", callback_data = t_.id_)
+            button = types.InlineKeyboardButton(f"({t_.id_}). {str(t_.date)}, {t_.task} {emojize(map_priority_to_unicode[t_.priority])}", callback_data = t_.id_)
+            keyboard.add(button)
+        
+        await message.answer("Нажмите на текст задачи, чтобы ее изменить", reply_markup=keyboard)
+        await ManageTasks.waiting_for_task_choice.set()
+
+
+
+@dp.message_handler(commands=["today"], state="*")
+@auth
+async def query_database(message: types.Message):
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    response = session.query(Task).filter(Task.date ==datetime.datetime.date(datetime.datetime.now())).order_by(Task.id_).all()
+    #print("RESPONSE", response)
+    if len(response) == 0:
+        await message.answer("Нет добавленных задач")
+    else:
+        keyboard = types.InlineKeyboardMarkup()
+        
+        #keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        for index, t_ in enumerate(response):
+            button = types.InlineKeyboardButton(f"({t_.id_}). {str(t_.date)}, {t_.task} {emojize(map_priority_to_unicode[t_.priority])}", callback_data = t_.id_)
             keyboard.add(button)
         
         await message.answer("Нажмите на текст задачи, чтобы ее изменить", reply_markup=keyboard)
@@ -89,7 +117,8 @@ async def handle_action_choise(message: types.Message, state: FSMContext):
         try:
             Session = sessionmaker(bind=engine)
             session = Session()
-            id_ = await state.get_data()["id_"]
+            id_ = await state.get_data()
+            id_ = id_["id_"]
             task_to_delete = session.query(Task).filter(Task.id_ == id_).one()
             session.delete(task_to_delete)
             session.commit()

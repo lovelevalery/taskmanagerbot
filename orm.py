@@ -21,6 +21,7 @@ class Task(Base):
     task = Column(String)
     priority = Column(Integer)
 
+
     def __repr__(self):
         return f"Когда: {self.date}\nЧе делаем: {self.task}\nПриоритет: {map_priority[self.priority]}"
 
