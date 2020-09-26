@@ -2,5 +2,6 @@ env
 main.db
 media/*
 setup.txt
+bot.py.bak
 __pycache__
 handlers/__pycache__/*
